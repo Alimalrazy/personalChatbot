@@ -111,40 +111,44 @@ class RateLimiter:
         return True, ""
 
 class SimpleEmbedder:
-    """Simplified text embedder using hash-based approach"""
+    """Text embedder using Google's Generative AI embedding model."""
     
-    def __init__(self):
-        pass
-    
+    def __init__(self, genai_instance: Any):
+        self.genai = genai_instance
+        self.model_name = "models/embedding-001"
+        self.dimension = 768  # Standard dimension for embedding-001
+
     def embed_text(self, text: str) -> List[float]:
-        """Generate simple embeddings using text hashing"""
-        # Create a reproducible hash-based embedding
-        text_normalized = text.lower().strip()
-        text_hash = hashlib.md5(text_normalized.encode()).hexdigest()
-        
-        # Convert to numerical representation (simplified)
-        embedding = []
-        for i in range(0, len(text_hash), 2):
-            hex_pair = text_hash[i:i+2]
-            embedding.append(int(hex_pair, 16) / 255.0)  # Normalize to 0-1
-        
-        # Pad or truncate to fixed size
-        target_size = 16
-        if len(embedding) < target_size:
-            embedding.extend([0.0] * (target_size - len(embedding)))
-        else:
-            embedding = embedding[:target_size]
-        
-        return embedding
+        """Generate embeddings for the given text using genai.embed_content."""
+        try:
+            result = self.genai.embed_content(
+                model=self.model_name,
+                content=text,
+                task_type="retrieval_document"
+            )
+            # Ensure the embedding is a list of floats and has the correct dimension
+            embedding = result['embedding']
+            if len(embedding) != self.dimension:
+                logger.warning(f"Embedding dimension mismatch: Expected {self.dimension}, got {len(embedding)}")
+                # Pad or truncate if necessary, though it shouldn't be for this model
+                if len(embedding) < self.dimension:
+                    embedding.extend([0.0] * (self.dimension - len(embedding)))
+                else:
+                    embedding = embedding[:self.dimension]
+            return embedding
+        except Exception as e:
+            logger.error(f"Error generating embedding: {e}")
+            # Fallback to a zero vector or raise an error, depending on desired behavior
+            return [0.0] * self.dimension  # Return a zero vector on failure
 
 class SimpleKnowledgeBase:
     """Simplified knowledge base without external dependencies"""
     
-    def __init__(self):
+    def __init__(self, genai_instance: Any):
         self.documents = []
         self.embeddings = []
         self.metadata = []
-        self.embedder = SimpleEmbedder()
+        self.embedder = SimpleEmbedder(genai_instance)
         self.full_text = ""  # Store the complete text for fallback
     
     def add_documents(self, docs: List[str], metadata: List[Dict] = None):
@@ -194,7 +198,7 @@ class ProfessionalAvatar:
         self.config = config
         self.security_validator = SecurityValidator(config)
         self.rate_limiter = RateLimiter(config)
-        self.knowledge_base = SimpleKnowledgeBase()
+        self.knowledge_base = SimpleKnowledgeBase(model)
         
         if model:
             self.model = model
@@ -562,13 +566,14 @@ def main():
     config = SecurityConfig()
     
     # Initialize avatar
-    def get_avatar(_model, _config):
+    def get_avatar(genai_module, _model, _config):
         avatar = ProfessionalAvatar(_model, _config)
+        avatar.knowledge_base.embedder = SimpleEmbedder(genai_module) # Pass genai_module to embedder
         avatar.initialize_knowledge_base()
         return avatar
     
     try:
-        avatar = get_avatar(model, config)
+        avatar = get_avatar(genai, model, config)
     except Exception as e:
         st.error(f"⚠️ **Chatbot Initialization Error**: {str(e)}")
         st.info("There was an issue setting up the chatbot. Please refresh the page to try again.")

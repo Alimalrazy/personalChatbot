@@ -1,5 +1,3 @@
-
-
 import unittest
 from unittest.mock import Mock, patch, MagicMock
 import sys
@@ -134,41 +132,55 @@ class TestRateLimiter(unittest.TestCase):
 
 
 class TestSimpleEmbedder(unittest.TestCase):
-    """Test suite for the hash-based text embedder."""
+    """Test suite for the genai-based text embedder."""
 
     def setUp(self):
-        self.embedder = SimpleEmbedder()
+        self.mock_genai = Mock()
+        self.embedder = SimpleEmbedder(self.mock_genai)
+        self.mock_genai.embed_content.return_value = {'embedding': [0.1] * 768}
 
-    def test_embedding_is_deterministic(self):
-        """Test that the same text always produces the same embedding."""
-        text = "This is a test sentence."
-        embedding1 = self.embedder.embed_text(text)
-        embedding2 = self.embedder.embed_text(text)
-        self.assertEqual(embedding1, embedding2)
-
-    def test_embedding_has_fixed_size(self):
-        """Test that embeddings are always padded/truncated to the correct size."""
-        text1 = "short"
-        text2 = "This is a much longer sentence to test the embedding size."
-        embedding1 = self.embedder.embed_text(text1)
-        embedding2 = self.embedder.embed_text(text2)
-        self.assertEqual(len(embedding1), 16)
-        self.assertEqual(len(embedding2), 16)
-
-    def test_embedding_values_are_normalized(self):
-        """Test that all embedding values are between 0 and 1."""
-        text = "Check normalization of embedding values."
+    def test_embed_text_calls_genai(self):
+        """Test that embed_text calls genai.embed_content."""
+        text = "Test text."
         embedding = self.embedder.embed_text(text)
-        for val in embedding:
-            self.assertGreaterEqual(val, 0.0)
-            self.assertLessEqual(val, 1.0)
+        self.mock_genai.embed_content.assert_called_once_with(
+            model="models/embedding-001",
+            content=text,
+            task_type="retrieval_document"
+        )
+        self.assertEqual(len(embedding), 768)
+
+    def test_embed_text_handles_error(self):
+        """Test that embed_text returns a zero vector on error."""
+        self.mock_genai.embed_content.side_effect = Exception("API Error")
+        text = "Error text."
+        embedding = self.embedder.embed_text(text)
+        self.assertEqual(embedding, [0.0] * 768)
 
 
 class TestSimpleKnowledgeBase(unittest.TestCase):
     """Test suite for the simple in-memory knowledge base."""
 
     def setUp(self):
-        self.kb = SimpleKnowledgeBase()
+        self.mock_genai = Mock()
+        self.kb = SimpleKnowledgeBase(self.mock_genai)
+        
+        # Mock the embedder's embed_text method directly
+        self.mock_embed_text = Mock()
+        self.kb.embedder.embed_text = self.mock_embed_text
+
+        # Define mock embeddings for predictable test results
+        self.mock_embeddings = {
+            "Doc 1: Python and AI": [0.9, 0.1, 0.1] + [0.0]*765,
+            "Doc 2: Web development": [0.1, 0.9, 0.1] + [0.0]*765,
+            "Doc 3: Project management": [0.1, 0.1, 0.9] + [0.0]*765,
+            "AI skills": [0.8, 0.1, 0.1] + [0.0]*765,
+            "Web dev": [0.1, 0.8, 0.1] + [0.0]*765,
+            "Management": [0.1, 0.1, 0.8] + [0.0]*765,
+            "Some context": [0.5, 0.5, 0.5] + [0.0]*765, # Generic context
+        }
+        self.mock_embed_text.side_effect = lambda text: self.mock_embeddings.get(text, [0.0]*768)
+
         self.docs = ["Doc 1: Python and AI", "Doc 2: Web development", "Doc 3: Project management"]
         self.kb.add_documents(self.docs)
 
@@ -176,16 +188,30 @@ class TestSimpleKnowledgeBase(unittest.TestCase):
         """Test that documents and their embeddings are added correctly."""
         self.assertEqual(len(self.kb.documents), 3)
         self.assertEqual(len(self.kb.embeddings), 3)
-        self.assertIn("Python and AI", self.kb.get_full_context())
+        self.assertIn("Doc 1: Python and AI", self.kb.get_full_context())
 
     def test_search_finds_relevant_docs(self):
         """Test that search returns the most relevant documents."""
-        # This search is deterministic due to the SimpleEmbedder
         results = self.kb.search("AI skills", top_k=1)
         self.assertEqual(len(results), 1)
-        self.assertIn(results[0][0], self.docs)
+        self.assertEqual(results[0][0], "Doc 1: Python and AI")
 
-    
+    def test_search_returns_multiple_docs(self):
+        """Test that search returns multiple relevant documents."""
+        results = self.kb.search("Web dev", top_k=2)
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0][0], "Doc 2: Web development")
+
+    def test_search_no_results(self):
+        """Test search with a query that has no relevant documents."""
+        results = self.kb.search("Irrelevant query", top_k=1)
+        self.assertEqual(len(results), 0)
+
+    def test_get_full_context(self):
+        """Test that get_full_context returns all documents."""
+        full_context = self.kb.get_full_context()
+        for doc in self.docs:
+            self.assertIn(doc, full_context)
 
 
 class TestProfessionalAvatar(unittest.TestCase):
@@ -200,7 +226,24 @@ class TestProfessionalAvatar(unittest.TestCase):
         # Configure mock_st.stop to raise SystemExit
         mock_st.stop.side_effect = SystemExit
         
+        self.mock_genai = Mock()
         self.avatar = ProfessionalAvatar(self.mock_model, self.config)
+        self.avatar.knowledge_base = SimpleKnowledgeBase(self.mock_genai)
+        # Mock the SimpleEmbedder class itself
+        self.mock_simple_embedder_class = Mock(spec=SimpleEmbedder)
+        # When SimpleEmbedder is instantiated, return a mock instance
+        self.mock_simple_embedder_class.return_value = Mock(spec=SimpleEmbedder)
+        # Mock the embed_text method of the returned instance
+        self.mock_simple_embedder_class.return_value.embed_text.return_value = [0.5]*768
+        
+        # Patch the SimpleEmbedder class in the app module
+        patcher = patch('app.SimpleEmbedder', new=self.mock_simple_embedder_class)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+        # Re-initialize avatar after patching
+        self.avatar = ProfessionalAvatar(self.mock_model, self.config)
+        self.avatar.knowledge_base = SimpleKnowledgeBase(self.mock_genai)
 
     @patch('os.path.exists', return_value=True)
     @patch('builtins.open', new_callable=unittest.mock.mock_open, read_data="Mocked professional info")
@@ -290,4 +333,3 @@ if __name__ == "__main__":
     
     # Exit with a status code indicating success or failure
     exit(0 if success else 1)
-
