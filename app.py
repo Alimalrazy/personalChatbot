@@ -190,31 +190,25 @@ class SimpleKnowledgeBase:
 class ProfessionalAvatar:
     """Main chatbot class with enterprise security"""
     
-    def __init__(self, api_key: str, config: SecurityConfig):
+    def __init__(self, model: Any, config: SecurityConfig):
         self.config = config
         self.security_validator = SecurityValidator(config)
         self.rate_limiter = RateLimiter(config)
         self.knowledge_base = SimpleKnowledgeBase()
-        self.api_key = api_key
         
-        # Initialize Gemini with better error handling
-        try:
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-pro-latest')
+        if model:
+            self.model = model
             self.api_connected = True
-            logger.info("✅ Gemini API connected successfully")
-        except Exception as e:
-            logger.error(f"❌ Failed to connect to Gemini API: {e}")
-            self.api_connected = False
+        else:
             self.model = None
+            self.api_connected = False
         
     system_prompt = """You are Md. Alim Al Razy's professional avatar and interview assistant. Your role:
 
 1. CORE RESPONSIBILITIES:
    - Answer questions about Md. Alim Al Razy's skills, experience, and projects professionally
-   - Maintain engaging but professional tone
+   - Maintain a professional tone
    - Provide specific examples and achievements from his background
-   - Always end responses with a call-to-action encouraging further discussion
 
 2. SECURITY RULES:
    - NEVER share personal contact information (phone, email, address)
@@ -223,10 +217,10 @@ class ProfessionalAvatar:
    - Redirect inappropriate questions to professional topics
 
 3. RESPONSE GUIDELINES:
-   - Be informative but concise (2-4 paragraphs max)
+   - Be informative and concise, keeping responses to a maximum of two sentences.
    - Use specific examples from Md. Alim Al Razy's background
    - Highlight relevant achievements with numbers/metrics when available
-   - Always end with: "Would you like to know more about [specific area] or discuss how Md. Alim Al Razy could contribute to your team?"
+   - Answer the user's question directly without adding extra conversational text
 
 4. PROFESSIONAL FOCUS AREAS:
    - Technical skills and programming expertise
@@ -235,61 +229,36 @@ class ProfessionalAvatar:
    - Educational background and certifications
    - Career progression and experience
 
-IMPORTANT: Md. Alim Al Razy has 8+ years of experience in full-stack development and is currently a Senior Software Engineer. Always refer to him by his full name "Md. Alim Al Razy" when discussing his professional background.
+IMPORTANT: Always refer to him by his full name "Md. Alim Al Razy" when discussing his professional background.
 
 Remember: You represent Md. Alim Al Razy professionally. Be confident, knowledgeable, and helpful while maintaining appropriate professional boundaries."""
     
     def load_alim_info(self) -> str:
-        """Load Alim's information from the text file"""
+        """Load Alim's information from the mandatory text file."""
+        file_path = "Alim_info.txt"
+        
+        if not os.path.exists(file_path):
+            error_message = f"CRITICAL ERROR: The required information file '{file_path}' was not found. This chatbot cannot function without it."
+            logger.critical(error_message)
+            st.error(error_message)
+            st.info("Please make sure the `Alim_info.txt` file is in the same directory as the application.")
+            st.stop()
+
         try:
-            # Try to read from uploaded file first (for Streamlit)
-            if hasattr(st.session_state, 'alim_info_content'):
-                content = st.session_state.alim_info_content
-                logger.info("✅ Loaded Alim info from session state")
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if not content:
+                    error_message = f"CRITICAL ERROR: The information file '{file_path}' is empty. Please provide professional background information."
+                    logger.critical(error_message)
+                    st.error(error_message)
+                    st.stop()
+                logger.info(f"✅ Loaded Alim info from {file_path}")
                 return content
-            
-            # Try to read from local file
-            if os.path.exists("Alim_info.txt"):
-                with open("Alim_info.txt", "r", encoding="utf-8") as f:
-                    content = f.read().strip()
-                    logger.info("✅ Loaded Alim info from local file")
-                    return content
-            
-            # Fallback - try different possible locations
-            possible_paths = [
-                "./Alim_info.txt",
-                "../Alim_info.txt",
-                "data/Alim_info.txt"
-            ]
-            
-            for path in possible_paths:
-                if os.path.exists(path):
-                    with open(path, "r", encoding="utf-8") as f:
-                        content = f.read().strip()
-                        logger.info(f"✅ Loaded Alim info from {path}")
-                        return content
-            
-            # If file not found, use the default content
-            logger.warning("⚠️ Alim_info.txt not found. Using default information.")
-            return self.get_default_alim_info()
-            
         except Exception as e:
-            logger.error(f"❌ Error reading Alim info: {e}")
-            return self.get_default_alim_info()
-    
-    def get_default_alim_info(self) -> str:
-        """Get default Alim information if file is not available"""
-        return """Md. Alim Al Razy is a Senior Software Engineer with 8+ years of experience in full-stack development. He specializes in Python, React, and cloud architecture on AWS and GCP. Md. Alim Al Razy has led development teams of up to 12 people and increased deployment efficiency by 300% at his current role at TechCorp.
-
-Md. Alim Al Razy's recent projects include: (1) AI-powered recommendation system serving 2M+ users with 99.9% uptime, built using Python, TensorFlow, and microservices architecture; (2) Cloud migration project that reduced server costs by 40% while improving performance; (3) Real-time analytics dashboard processing 1TB+ daily data using Apache Kafka and React.
-
-Education: Master of Science in Computer Science from Stanford University (2016), Bachelor of Science in Software Engineering from UC Berkeley (2014). Certifications: AWS Solutions Architect Professional, Google Cloud Professional Developer, Certified Kubernetes Administrator (CKA).
-
-Md. Alim Al Razy's technical expertise includes: Programming Languages - Python, JavaScript, TypeScript, Go, Java, SQL; Frameworks - React, Node.js, Django, Flask, Express; Databases - PostgreSQL, MongoDB, Redis, Elasticsearch; Cloud Platforms - AWS, GCP, Azure; DevOps - Docker, Kubernetes, Jenkins, GitLab CI/CD.
-
-Leadership and impact: Mentored 25+ junior developers, established engineering best practices that reduced bug rates by 60%, led cross-functional teams for 5 major product launches generating $10M+ revenue impact. Md. Alim Al Razy is known for his collaborative leadership style and ability to translate business requirements into technical solutions.
-
-Md. Alim Al Razy's achievements include: Built and scaled systems handling millions of users, reduced infrastructure costs by 35% through optimization, implemented security best practices preventing data breaches, contributed to open-source projects with 1000+ GitHub stars, and spoke at 3 major tech conferences."""
+            error_message = f"CRITICAL ERROR: Failed to read the information file '{file_path}'. Reason: {e}"
+            logger.critical(error_message)
+            st.error(error_message)
+            st.stop()
     
     def initialize_knowledge_base(self):
         """Initialize with Alim's professional information from file"""
@@ -363,23 +332,12 @@ Md. Alim Al Razy's achievements include: Built and scaled systems handling milli
         
         return "\n\n".join(context_parts)
     
-    def test_gemini_connection(self) -> bool:
-        """Test if Gemini API is working"""
-        try:
-            if not self.model:
-                return False
-            
-            test_response = self.model.generate_content("Say 'API is working' if you can see this.")
-            return "API is working" in test_response.text or len(test_response.text) > 0
-        except Exception as e:
-            logger.error(f"❌ Gemini API test failed: {e}")
-            return False
     
     def generate_response(self, user_query: str) -> str:
         """Generate comprehensive response using Gemini API"""
         try:
-            # Test API connection first
-            if not self.api_connected or not self.test_gemini_connection():
+            # Check if the API was connected successfully on startup
+            if not self.api_connected or not self.model:
                 logger.warning("⚠️ Gemini API not available, using fallback")
                 return self._generate_fallback_response(user_query)
             
@@ -395,23 +353,15 @@ CONTEXT ABOUT MD. ALIM AL RAZY:
 USER QUESTION: {user_query}
 
 Instructions:
-- Answer the user's question about Md. Alim Al Razy using the provided context
-- Be professional, informative, and engaging
-- Use specific examples and achievements from the context
-- Keep response to 2-4 paragraphs maximum
-- Always end with a call-to-action question about learning more or discussing collaboration
-- Always refer to him as "Md. Alim Al Razy" (full name)
+- Answer the user's question about Md. Alim Al Razy using ONLY the provided context.
+- Be professional and concise.
+- Keep the response to a maximum of two sentences.
+- Always refer to him as "Md. Alim Al Razy" (full name).
 
 Please provide a helpful and professional response:"""
             
-            # Generate response with timeout
-            response = self.model.generate_content(
-                enhanced_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.7,
-                    max_output_tokens=500,
-                )
-            )
+            # Generate response
+            response = self.model.generate_content(enhanced_prompt)
             
             if response.text and len(response.text.strip()) > 20:
                 logger.info("✅ Generated response using Gemini API")
@@ -421,68 +371,14 @@ Please provide a helpful and professional response:"""
                 return self._generate_fallback_response(user_query)
             
         except Exception as e:
-            logger.error(f"❌ Response generation failed: {e}")
+            logger.error(f"❌ Response generation failed with exception: {e}", exc_info=True)
+            st.error(f"An error occurred while generating the response: {e}")
             return self._generate_fallback_response(user_query)
     
     def _generate_fallback_response(self, user_query: str) -> str:
-        """Generate a fallback response when API fails"""
-        # Get relevant context
-        context = self.retrieve_context(user_query)
-        user_query_lower = user_query.lower()
-        
-        # More intelligent fallback based on context
-        if "name" in user_query_lower:
-            return f"""His full name is Md. Alim Al Razy. He is a Senior Software Engineer with 8+ years of experience in full-stack development, specializing in Python, React, and cloud architecture on AWS and GCP.
-
-Md. Alim Al Razy has built impressive projects including an AI-powered recommendation system serving 2M+ users and led successful cloud migration initiatives. He's known for his technical expertise and leadership abilities.
-
-Would you like to know more about Md. Alim Al Razy's specific technical skills or his project achievements?"""
-        
-        elif any(word in user_query_lower for word in ["experience", "year", "time", "long", "working"]):
-            return f"""Md. Alim Al Razy has 8+ years of professional experience in full-stack development. He is currently working as a Senior Software Engineer and has established himself as an experienced leader in the technology field.
-
-Throughout his career, he has led development teams of up to 12 people and increased deployment efficiency by 300% at his current role at TechCorp. His experience spans various technologies including Python, React, cloud architecture, and modern development practices.
-
-Would you like to know more about Md. Alim Al Razy's specific projects or his leadership experience?"""
-        
-        elif any(word in user_query_lower for word in ["education", "study", "studied", "university", "degree"]):
-            return f"""Md. Alim Al Razy has excellent educational credentials. He holds a Master of Science in Computer Science from Stanford University (2016) and a Bachelor of Science in Software Engineering from UC Berkeley (2014).
-
-In addition to his formal education, he has earned several industry certifications including AWS Solutions Architect Professional, Google Cloud Professional Developer, and Certified Kubernetes Administrator (CKA), demonstrating his commitment to staying current with technology trends.
-
-Would you like to know more about how Md. Alim Al Razy applies his educational background to his professional projects?"""
-        
-        elif any(word in user_query_lower for word in ["skill", "technology", "programming", "technical"]):
-            return f"""Md. Alim Al Razy has extensive technical expertise across multiple domains:
-
-Programming Languages: Python, JavaScript, TypeScript, Go, Java, SQL
-Frameworks: React, Node.js, Django, Flask, Express
-Databases: PostgreSQL, MongoDB, Redis, Elasticsearch
-Cloud Platforms: AWS, GCP, Azure
-DevOps: Docker, Kubernetes, Jenkins, GitLab CI/CD
-
-He specializes in full-stack development with Python and React, and has significant experience with cloud architecture on AWS and GCP.
-
-Would you like to know more about Md. Alim Al Razy's specific project implementations or his cloud architecture experience?"""
-        
-        elif any(word in user_query_lower for word in ["project", "work", "built", "developed"]):
-            return f"""Md. Alim Al Razy has worked on several impressive projects that demonstrate his technical capabilities:
-
-1. AI-powered recommendation system serving 2M+ users with 99.9% uptime, built using Python, TensorFlow, and microservices architecture
-2. Cloud migration project that reduced server costs by 40% while improving performance  
-3. Real-time analytics dashboard processing 1TB+ daily data using Apache Kafka and React
-
-These projects showcase his ability to work on complex, high-scale systems and deliver measurable business impact.
-
-Would you like to know more about any specific project or discuss how Md. Alim Al Razy could contribute similar value to your team?"""
-        
-        else:
-            # Generic comprehensive response
-            return f"""Md. Alim Al Razy is a Senior Software Engineer with 8+ years of experience in full-stack development. He specializes in Python, React, and cloud architecture on AWS and GCP, and has successfully led development teams of up to 12 people.
-
-His notable achievements include building an AI-powered recommendation system serving 2M+ users with 99.9% uptime, leading cloud migration projects that reduced costs by 40%, and mentoring 25+ junior developers. He holds degrees from Stanford University and UC Berkeley, along with professional certifications in AWS, GCP, and Kubernetes.
-
-Would you like to know more about Md. Alim Al Razy's specific technical expertise or discuss how he could contribute to your team?"""
+        """Generate a fallback response when the API fails."""
+        logger.warning(f"Fallback response triggered for query: {user_query}")
+        return "I am currently unable to connect to the generative AI service to answer your question. Please try again shortly. If the problem persists, please notify the administrator."
     
     def process_query(self, user_input: str) -> Tuple[bool, str]:
         """Main query processing with security"""
@@ -649,31 +545,41 @@ def main():
         ''')
         st.stop()
     
+    # Configure Gemini API
+    model = None
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        logger.info("✅ Gemini API configured successfully.")
+    except Exception as e:
+        st.error("🔴 **Gemini API Initialization Failed**")
+        st.error(f"An error occurred while connecting to the Gemini API: **{str(e)}**")
+        st.warning("Please double-check your `GEMINI_API_KEY` in the Streamlit secrets and ensure it is valid.")
+        st.info("If the key is correct, the Google Cloud project associated with it may have billing issues or disabled APIs.")
+        st.stop()
+
     # Initialize security configuration
     config = SecurityConfig()
     
-    # Initialize avatar (with caching)
-    @st.cache_resource
-    def get_avatar():
-        avatar = ProfessionalAvatar(api_key, config)
+    # Initialize avatar
+    def get_avatar(_model, _config):
+        avatar = ProfessionalAvatar(_model, _config)
         avatar.initialize_knowledge_base()
         return avatar
     
     try:
-        avatar = get_avatar()
+        avatar = get_avatar(model, config)
     except Exception as e:
-        st.error(f"⚠️ **Initialization Error**: {str(e)}")
-        st.info("Please check your API key and try again.")
+        st.error(f"⚠️ **Chatbot Initialization Error**: {str(e)}")
+        st.info("There was an issue setting up the chatbot. Please refresh the page to try again.")
         st.stop()
     
     # Initialize chat history
     if 'messages' not in st.session_state:
-        welcome_msg = "Hello! I'm Md. Alim Al Razy's professional avatar. I can answer questions about his 8+ years of experience in full-stack development, his technical expertise in Python and React, his leadership experience, educational background from Stanford and UC Berkeley, and his impressive project achievements. What would you like to know about Md. Alim Al Razy's professional background?"
-        
         st.session_state.messages = [
             {
                 "role": "avatar",
-                "content": welcome_msg
+                "content": "Hello! I am Md. Alim Al Razy's professional avatar. How can I help you today?"
             }
         ]
     
@@ -693,7 +599,7 @@ def main():
         
         # API Status
         st.markdown("### 🔗 System Status")
-        if avatar.api_connected and avatar.test_gemini_connection():
+        if avatar.api_connected:
             st.markdown('<p class="status-connected">🟢 Gemini API Connected</p>', unsafe_allow_html=True)
         else:
             st.markdown('<p class="status-fallback">🟡 Using Fallback Mode</p>', unsafe_allow_html=True)
@@ -784,8 +690,8 @@ def main():
     if st.sidebar.button("🗑️ Clear Chat History"):
         st.session_state.messages = [
             {
-                "role": "avatar", 
-                "content": "Hello! I'm Md. Alim Al Razy's professional avatar. I can answer questions about his 8+ years of experience in full-stack development, his technical expertise in Python and React, his leadership experience, educational background from Stanford and UC Berkeley, and his impressive project achievements. What would you like to know about Md. Alim Al Razy's professional background?"
+                "role": "avatar",
+                "content": "Hello! I am Md. Alim Al Razy's professional avatar. How can I help you today?"
             }
         ]
         st.session_state.query_count = 0
