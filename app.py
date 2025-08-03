@@ -639,7 +639,14 @@ def main():
             raise ValueError("Invalid API key")
     except (KeyError, FileNotFoundError, ValueError):
         st.error("⚠️ **Configuration Error**: Gemini API key not found or invalid in secrets.")
-        st.info("📋 **How to add secrets**: Go to your Streamlit app settings → Secrets → Add `GEMINI_API_KEY = \"your-key-here\"`")
+        st.info("📋 **How to add secrets on Streamlit Cloud**:")
+        st.markdown('''
+        1. Go to your app's page on [Streamlit Cloud](https://share.streamlit.io).
+        2. Click on the **Settings** button in the top right corner.
+        3. Go to the **Secrets** tab.
+        4. Add your Gemini API key as a new secret with the following format:
+           `GEMINI_API_KEY = "your-api-key-here"`
+        ''')
         st.stop()
     
     # Initialize security configuration
