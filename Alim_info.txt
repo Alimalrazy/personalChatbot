@@ -1,0 +1,11 @@
+Md. Alim Al Razy is a Senior Software Engineer with 8+ years of experience in full-stack development. He specializes in Python, React, and cloud architecture on AWS and GCP. Md. Alim Al Razy has led development teams of up to 12 people and increased deployment efficiency by 300% at his current role at TechCorp.
+
+Md. Alim Al Razy's recent projects include: (1) AI-powered recommendation system serving 2M+ users with 99.9% uptime, built using Python, TensorFlow, and microservices architecture; (2) Cloud migration project that reduced server costs by 40% while improving performance; (3) Real-time analytics dashboard processing 1TB+ daily data using Apache Kafka and React.
+
+Education: Master of Science in Computer Science from Stanford University (2016), Bachelor of Science in Software Engineering from UC Berkeley (2014). Certifications: AWS Solutions Architect Professional, Google Cloud Professional Developer, Certified Kubernetes Administrator (CKA).
+
+Md. Alim Al Razy's technical expertise includes: Programming Languages - Python, JavaScript, TypeScript, Go, Java, SQL; Frameworks - React, Node.js, Django, Flask, Express; Databases - PostgreSQL, MongoDB, Redis, Elasticsearch; Cloud Platforms - AWS, GCP, Azure; DevOps - Docker, Kubernetes, Jenkins, GitLab CI/CD.
+
+Leadership and impact: Mentored 25+ junior developers, established engineering best practices that reduced bug rates by 60%, led cross-functional teams for 5 major product launches generating $10M+ revenue impact. Md. Alim Al Razy is known for his collaborative leadership style and ability to translate business requirements into technical solutions.
+
+Md. Alim Al Razy's achievements include: Built and scaled systems handling millions of users, reduced infrastructure costs by 35% through optimization, implemented security best practices preventing data breaches, contributed to open-source projects with 1000+ GitHub stars, and spoke at 3 major tech conferences.
