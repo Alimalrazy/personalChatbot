@@ -221,11 +221,7 @@ def main():
     # Footer
     st.markdown("""
     <div class='footer'>
-        <h3>🚀 About This Avatar</h3>
-        <p>
-            Built with <strong>Streamlit</strong> • Powered by <strong>Google Gemini</strong> • 
-            Secured with <strong>Enterprise-grade</strong> safety measures
-        </p>
+
         <p>
             <small>
                 This AI avatar represents Md. Alim Al Razy professionally. All responses are generated 
