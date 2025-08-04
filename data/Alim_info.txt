@@ -8,6 +8,6 @@ Previously at Devolved AI (Dec 2023–Apr 2025), Md. Alim led chatbot developmen
 
 Earlier, at O’Dell Tech (Jul 2022–Nov 2023), he engineered a BERT-powered support chatbot that cut manual task loads by 50%, and developed a Bangla character detection system using CNN and GAN networks with 96% accuracy—paving the way for OCR and digital transformation in regional scripts.
 
-He holds a B.Sc. in Electrical & Electronic Engineering from BRAC University (2019). As the first author of a research paper on silver nanoparticle synthesis and UV-VIS spectroscopy, he contributed to a study cited 55+ times, underscoring his analytical and interdisciplinary skills.
+He holds a B.Sc. in Electrical & Electronic Engineering from BRAC University (2019). As the first author of a research paper on silver nanoparticle synthesis and UV-VIS spectroscopy, he contributed to a research cited 55+ times, underscoring his analytical and interdisciplinary skills.
 
-Md. Alim is a Bronze Medalist in the International Youth Math Challenge (IYMC), ranking in the top 20% globally. He’s also an open-source contributor, publishing ML tools and research with 1000+ stars on GitHub.
+Md. Alim is a Bronze Medalist in the International Youth Math Challenge (IYMC), ranking in the top 20% globally.
