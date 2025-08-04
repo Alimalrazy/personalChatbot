@@ -14,111 +14,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def load_custom_css():
-    """Load custom CSS for professional appearance"""
-    st.markdown("""
-    <style>
-    /* Main container styling */
-    .main {
-        padding-top: 2rem;
-    }
-    
-    /* Header styling */
-    .main-header {
-        text-align: center;
-        color: #1f4e79;
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-    
-    .subtitle {
-        text-align: center;
-        color: #666;
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-    
-    /* Chat styling */
-    .chat-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 1rem;
-    }
-    
-    .user-message {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 15px;
-        margin: 0.5rem 0;
-        margin-left: 2rem;
-    }
-    
-    .avatar-message {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 15px;
-        margin: 0.5rem 0;
-        margin-right: 2rem;
-        border-left: 4px solid #fff;
-    }
-    
-    /* Status indicators */
-    .status-connected {
-        color: #28a745;
-        font-weight: bold;
-    }
-    
-    .status-fallback {
-        color: #ffc107;
-        font-weight: bold;
-    }
-    
-    /* Input styling */
-    .stTextInput > div > div > input {
-        background-color: #f8f9fa;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
-        padding: 0.75rem;
-        font-size: 1rem;
-    }
-    
-    .stTextInput > div > div > input:focus {
-        border-color: #1f4e79;
-        box-shadow: 0 0 0 0.2rem rgba(31, 78, 121, 0.25);
-    }
-    
-    /* Button styling */
-    .stButton > button {
-        background: linear-gradient(135deg, #1f4e79 0%, #2980b9 100%);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .user-message, .avatar-message {
-            margin-left: 0;
-            margin-right: 0;
-        }
-        
-        .main-header {
-            font-size: 2rem;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
+def load_custom_css(file_path: str):
+    """Load custom CSS from a file"""
+    with open(file_path) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def main():
     """Main Streamlit application"""
@@ -131,7 +30,7 @@ def main():
     )
     
     # Load custom CSS
-    load_custom_css()
+    load_custom_css("frontend/styles.css")
     
     # Header
     st.markdown("<h1 class='main-header'>👨‍💼 Md. Alim Al Razy's Professional Avatar</h1>", unsafe_allow_html=True)

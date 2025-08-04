@@ -4,14 +4,14 @@ import sys
 import os
 import time
 
-# Add the src directory to the path to import the main app modules
+# Add the root directory to the path to import the main app modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Mock streamlit before importing the app
 mock_st = MagicMock()
 sys.modules['streamlit'] = mock_st
 
-from src.chatbot.logic import (
+from chatbot.logic import (
     SecurityConfig,
     SecurityValidator,
     RateLimiter,
@@ -98,7 +98,7 @@ class TestProfessionalAvatar(unittest.TestCase):
         self.mock_genai = Mock()
         
         # Patch SimpleEmbedder within the logic module
-        patcher = patch('src.chatbot.logic.SimpleEmbedder', autospec=True)
+        patcher = patch('chatbot.logic.SimpleEmbedder', autospec=True)
         self.mock_embedder_class = patcher.start()
         self.addCleanup(patcher.stop)
         self.mock_embedder_instance = self.mock_embedder_class.return_value
@@ -115,13 +115,13 @@ class TestProfessionalAvatar(unittest.TestCase):
         self.assertGreater(len(self.avatar.knowledge_base.documents), 0)
         self.assertEqual(self.avatar.knowledge_base.documents[0], "Mocked professional info..")
         # Verify that the correct file path is checked
-        mock_exists.assert_called_with("src/data/Alim_info.txt")
+        mock_exists.assert_called_with("data/Alim_info.txt")
 
     @patch('os.path.exists', return_value=False)
     def test_load_alim_info_file_not_found(self, mock_exists):
         with self.assertRaises(SystemExit):
             self.avatar.load_alim_info()
-        mock_st.error.assert_called_with("CRITICAL ERROR: The required information file 'src/data/Alim_info.txt' was not found. This chatbot cannot function without it.")
+        mock_st.error.assert_called_with("CRITICAL ERROR: The required information file 'data/Alim_info.txt' was not found. This chatbot cannot function without it.")
         mock_st.stop.assert_called()
 
     def test_generate_response_api_success(self):
