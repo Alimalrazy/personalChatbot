@@ -223,7 +223,8 @@ def main():
     <div class='footer'>
         <h3>🚀 About This Avatar</h3>
         <p>
-            
+            Secured with <strong>Enterprise-grade</strong> safety measures
+        </p>
         </p>
         <p>
             <small>
