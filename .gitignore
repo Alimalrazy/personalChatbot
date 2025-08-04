@@ -47,7 +47,7 @@ Thumbs.db
 *.log
 
 # Local data
-data/
+
 temp/
 *.pkl
 *.faiss
