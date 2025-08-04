@@ -1,4 +1,4 @@
-Md. Alim Al Razy is an AI Specialist and Full-Stack Developer with deep expertise in NLP, machine learning, and scalable software systems. With a background in electrical engineering and hands-on leadership in LLM finetuning, game AI, and anomaly detection, he engineers intelligent systems that serve real-world needs.
+Md. Alim Al Razy is an AI Specialist with deep expertise in NLP, machine learning, and scalable software systems. With a background in electrical engineering and hands-on leadership in LLM finetuning, game AI, and anomaly detection, he engineers intelligent systems that serve real-world needs.
 
 Currently at Bulipe Tech (May 2025–Present), Md. Alim is building a prompt-to-game generator that lets users create functional games from natural language. This system uses a lightweight LLM to parse scene logic and auto-generate executable Pygame code, expanding game development access for non-programmers. He also developed an AI-powered grading assistant that applies transformer-based semantic models and rubric-based scoring to evaluate student answers—fine-tuned on QA datasets for fairness and accuracy.
 
@@ -11,3 +11,14 @@ Earlier, at O’Dell Tech (Jul 2022–Nov 2023), he engineered a BERT-powered su
 He holds a B.Sc. in Electrical & Electronic Engineering from BRAC University (2019). As the first author of a research paper on silver nanoparticle synthesis and UV-VIS spectroscopy, he contributed to a research cited 55+ times, underscoring his analytical and interdisciplinary skills.
 
 Md. Alim is a Bronze Medalist in the International Youth Math Challenge (IYMC), ranking in the top 20% globally.
+
+Experience of Alim Al Razy:
+Bulipe Tech, AI Specialist (May 2025 - Present)
+AI MSP, FULL STACK DEVELOPER (March 2025 - May 2025)
+DEVOLVED AI, MACHINE LEARNING ENGINEER (December 2023 - April 2025)
+O’DELL TECH, AI ENGINEER (July 2022 - November 2023)
+COLOCITY LIMITED, NETWORK AND SYSTEM ENGINEER (January 2021 - June 2022)
+AQUALINK BANGLADESH LIMITED, EMBEDDED SYSTEM ENGINEER (August 2019 - July 2020)
+
+Total experience: more than 5.5 years
+Experience in AI field: more than 3 years
