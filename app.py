@@ -221,7 +221,10 @@ def main():
     # Footer
     st.markdown("""
     <div class='footer'>
-
+        <h3>🚀 About This Avatar</h3>
+        <p>
+            Secured with <strong>Enterprise-grade</strong> safety measures
+        </p>
         <p>
             <small>
                 This AI avatar represents Md. Alim Al Razy professionally. All responses are generated 
