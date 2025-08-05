@@ -39,3 +39,13 @@ The project focuses on Bengali character recognition by classifying isolated cha
 
 # Denoising Image
 •	Denoising image by Deep Learning model. Autoencoder is used to do this project and found the mean squared error is 0.02.
+
+Courses
+
+# Big Data, Data Science & Data Analytics | SEIP | 160 hours
+# Deep Learning for Computer Vision and NLP | AIQuest | 50 hours
+# Internet of Things | Brac University | 90 hours
+# Introduction to Astronomical Databases & Their Uses | MASLab, The Haus der Astronomie (HdA), Max Planck Institute for Astronomy | 4 hours
+# Vector Calculus | 60 hours | Community of Physics
+# Google Data Analytics Professional Certificate (8 Courses Series) | Google,Coursera | 84 hours
+# Machine Learning Specialization (4 Course Series) | University of Washington, Coursera | 78 hours
