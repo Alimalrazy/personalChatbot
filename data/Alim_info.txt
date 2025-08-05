@@ -30,3 +30,6 @@ Md. Alim Al Razy created the project named AI Game Generator is a tool that crea
 
 # gradingSystemAutomation
 The AI-Powered Grading Automation project is a web application that uses Google's Gemini AI to grade student answers. The application, built with Python and Streamlit, features an intuitive interface where users input a question and an answer. The AI then evaluates the answer based on criteria such as accuracy, completeness, and clarity, providing a score from 0-10.
+
+#Resume Automation
+This project automates the categorization of resumes by using a machine learning model. It extracts and cleans text from PDF files, then uses a trained Support Vector Machine (SVM) to classify them into one of 24 predefined categories. The script saves the categorized results into a CSV file and also stores the trained model, vectorizer, and label encoder for future use. The model's performance is evaluated using metrics like accuracy, precision, and F1-score, with the results displayed in the console and as plots. To use it, you install the necessary Python libraries and run the script with a path to a directory of resumes.
