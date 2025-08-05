@@ -36,3 +36,6 @@ This project automates the categorization of resumes by using a machine learning
 
 # Bangla Character detection using GAN
 The project focuses on Bengali character recognition by classifying isolated characters using a Convolutional Neural Network (CNN). Built with TensorFlow and Keras, the model is trained on the BanglaLekha-Isolated dataset. The primary code is located in a Jupyter notebook that handles data preprocessing, model building, training, and evaluation, including a confusion matrix to assess performance. The project also includes a separate experiment with a Generative Adversarial Network (GAN) on the same dataset.
+
+# Denoising Image
+•	Denoising image by Deep Learning model. Autoencoder is used to do this project and found the mean squared error is 0.02.
