@@ -25,5 +25,8 @@ Experience in AI field: more than 3 years
 
 
 Project
-AI based prompt-to-game generator
+# AI based prompt-to-game generator
 Md. Alim Al Razy created the project named AI Game Generator is a tool that creates playable HTML games based on simple text descriptions. Users can choose between AI providers like OpenRouter and Google Gemini to power the generation process. The platform features an intuitive interface, fast game creation, and the ability to download games as standalone HTML files. Users can get started either by running a single HTML file without installation or by using the Streamlit version, which requires a Python setup. The document provides clear instructions for setting up the necessary API keys, using the tool with example game descriptions, and troubleshooting common issues.
+
+# gradingSystemAutomation
+The AI-Powered Grading Automation project is a web application that uses Google's Gemini AI to grade student answers. The application, built with Python and Streamlit, features an intuitive interface where users input a question and an answer. The AI then evaluates the answer based on criteria such as accuracy, completeness, and clarity, providing a score from 0-10.
