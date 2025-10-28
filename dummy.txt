@@ -1,0 +1,52 @@
+Md. Alim Al Razy is an AI Specialist with deep expertise in NLP, machine learning, and scalable software systems. With a background in electrical engineering and hands-on leadership in LLM finetuning, game AI, and anomaly detection, he engineers intelligent systems that serve real-world needs.
+
+Currently at Bulipe Tech (May 2025–Present), Md. Alim is building a prompt-to-game generator that lets users create functional games from natural language. This system uses a lightweight LLM to parse scene logic and auto-generate executable Pygame code, expanding game development access for non-programmers. He also developed an AI-powered grading assistant that applies transformer-based semantic models and rubric-based scoring to evaluate student answers—fine-tuned on QA datasets for fairness and accuracy.
+
+As a Full-Stack Developer at AI MSP (Mar 2025–May 2025, Remote), he built a behavioral anomaly detection engine using Z-score baselining, geo-velocity checks, and unsupervised ML (Isolation Forest, K-Means). He integrated HR context, threat feeds, and suppression logic to reduce false positives—bolstering alert quality in high-volume log environments.
+
+Previously at Devolved AI (Dec 2023–Apr 2025), Md. Alim led chatbot development by finetuning Yi-34b, LLaMA 2, and GPT-3.5-turbo, enabling real-time web retrieval, historical memory via LangChain, and API-enhanced information extraction. He also trained a custom LLM from scratch using hybrid parallelism on multi-GPU clusters, optimized model adaptability via fine-tuning, and handled massive-scale preprocessing in Spark—cleaning, normalizing, and debiasing datasets.
+
+Earlier, at O’Dell Tech (Jul 2022–Nov 2023), he engineered a BERT-powered support chatbot that cut manual task loads by 50%, and developed a Bangla character detection system using CNN and GAN networks with 96% accuracy—paving the way for OCR and digital transformation in regional scripts.
+
+He holds a B.Sc. in Electrical & Electronic Engineering from BRAC University (2019). As the first author of a research paper on silver nanoparticle synthesis and UV-VIS spectroscopy, he contributed to a research cited 55+ times, underscoring his analytical and interdisciplinary skills.
+
+Md. Alim is a Bronze Medalist in the International Youth Math Challenge (IYMC), ranking in the top 20% globally.
+
+Experience of Alim Al Razy:
+Bulipe Tech, AI Specialist (May 2025 - Present)
+AI MSP, FULL STACK DEVELOPER (March 2025 - May 2025)
+DEVOLVED AI, MACHINE LEARNING ENGINEER (December 2023 - April 2025)
+O’DELL TECH, AI ENGINEER (July 2022 - November 2023)
+COLOCITY LIMITED, NETWORK AND SYSTEM ENGINEER (January 2021 - June 2022)
+AQUALINK BANGLADESH LIMITED, EMBEDDED SYSTEM ENGINEER (August 2019 - July 2020)
+
+Total experience: more than 5.5 years
+Experience in AI field: more than 3 years
+
+
+Project
+# AI based prompt-to-game generator
+Md. Alim Al Razy created the project named AI Game Generator is a tool that creates playable HTML games based on simple text descriptions. Users can choose between AI providers like OpenRouter and Google Gemini to power the generation process. The platform features an intuitive interface, fast game creation, and the ability to download games as standalone HTML files. Users can get started either by running a single HTML file without installation or by using the Streamlit version, which requires a Python setup. The document provides clear instructions for setting up the necessary API keys, using the tool with example game descriptions, and troubleshooting common issues.
+
+# gradingSystemAutomation
+The AI-Powered Grading Automation project is a web application that uses Google's Gemini AI to grade student answers. The application, built with Python and Streamlit, features an intuitive interface where users input a question and an answer. The AI then evaluates the answer based on criteria such as accuracy, completeness, and clarity, providing a score from 0-10.
+
+#Resume Automation
+This project automates the categorization of resumes by using a machine learning model. It extracts and cleans text from PDF files, then uses a trained Support Vector Machine (SVM) to classify them into one of 24 predefined categories. The script saves the categorized results into a CSV file and also stores the trained model, vectorizer, and label encoder for future use. The model's performance is evaluated using metrics like accuracy, precision, and F1-score, with the results displayed in the console and as plots. To use it, you install the necessary Python libraries and run the script with a path to a directory of resumes.
+
+# Bangla Character detection using GAN
+The project focuses on Bengali character recognition by classifying isolated characters using a Convolutional Neural Network (CNN). Built with TensorFlow and Keras, the model is trained on the BanglaLekha-Isolated dataset. The primary code is located in a Jupyter notebook that handles data preprocessing, model building, training, and evaluation, including a confusion matrix to assess performance. The project also includes a separate experiment with a Generative Adversarial Network (GAN) on the same dataset.
+
+# Denoising Image
+Denoising image by Deep Learning model. Autoencoder is used to do this project and found the mean squared error is 0.02.
+
+Courses
+
+# Big Data, Data Science & Data Analytics | SEIP | 160 hours
+# Deep Learning for Computer Vision and NLP | AIQuest | 50 hours
+# Internet of Things | Brac University | 90 hours
+# Introduction to Astronomical Databases & Their Uses | MASLab, The Haus der Astronomie (HdA), Max Planck Institute for Astronomy | 4 hours
+# Vector Calculus | 60 hours | Community of Physics
+# Google Data Analytics Professional Certificate (8 Courses Series) | Google,Coursera | 84 hours
+# Machine Learning Specialization (4 Course Series) | University of Washington, Coursera | 78 hours
+
