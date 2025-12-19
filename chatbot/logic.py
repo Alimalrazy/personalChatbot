@@ -2,22 +2,14 @@
 Core chatbot logic for the Professional Avatar application.
 """
 
-import streamlit as st
-import google.generativeai as genai
+from google import genai
 import numpy as np
 import logging
 import re
 import time
-import hashlib
-import json
 import os
 from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
-from datetime import datetime
-
-# Suppress warnings for cleaner output
-import warnings
-warnings.filterwarnings('ignore')
 
 # Configure logging
 logging.basicConfig(
@@ -93,6 +85,7 @@ class RateLimiter:
         current_time = time.time()
         
         # Initialize session state
+        import streamlit as st
         if 'query_count' not in st.session_state:
             st.session_state.query_count = 0
             st.session_state.first_query_time = current_time
@@ -111,53 +104,52 @@ class RateLimiter:
 class SimpleEmbedder:
     """Text embedder using Google's Generative AI embedding model."""
     
-    def __init__(self, genai_instance: Any):
-        self.genai = genai_instance
-        self.model_name = "models/embedding-001"
-        self.dimension = 768  # Standard dimension for embedding-001
+    def __init__(self, client: genai.Client):
+        self.client = client
+        self.model_name = "text-embedding-004"
+        self.dimension = 768
 
     def embed_text(self, text: str) -> List[float]:
-        """Generate embeddings for the given text using genai.embed_content."""
+        """Generate embeddings for the given text using client.models.embed_content."""
         try:
-            result = self.genai.embed_content(
+            result = self.client.models.embed_content(
                 model=self.model_name,
-                content=text,
-                task_type="retrieval_document"
+                contents=text,
+                config={'task_type': 'RETRIEVAL_DOCUMENT'}
             )
-            # Ensure the embedding is a list of floats and has the correct dimension
-            embedding = result['embedding']
-            if len(embedding) != self.dimension:
-                logger.warning(f"Embedding dimension mismatch: Expected {self.dimension}, got {len(embedding)}")
-                # Pad or truncate if necessary, though it shouldn't be for this model
-                if len(embedding) < self.dimension:
-                    embedding.extend([0.0] * (self.dimension - len(embedding)))
-                else:
-                    embedding = embedding[:self.dimension]
+            # result.embeddings is a list of Embedding objects
+            embedding = result.embeddings[0].values
             return embedding
         except Exception as e:
-            logger.error(f"Error generating embedding: {e}")
-            # Fallback to a zero vector or raise an error, depending on desired behavior
-            return [0.0] * self.dimension  # Return a zero vector on failure
+            logger.error(f"Error generating embedding with {self.model_name}: {e}")
+            return [0.0] * self.dimension
 
 class SimpleKnowledgeBase:
     """Simplified knowledge base without external dependencies"""
     
-    def __init__(self, genai_instance: Any):
+    def __init__(self, client: genai.Client):
         self.documents = []
         self.embeddings = []
         self.metadata = []
-        self.embedder = SimpleEmbedder(genai_instance)
-        self.full_text = ""  # Store the complete text for fallback
+        self.embedder = SimpleEmbedder(client)
+        self.full_text = ""
     
     def add_documents(self, docs: List[str], metadata: List[Dict] = None):
         """Add documents with their embeddings"""
         self.documents.extend(docs)
-        self.full_text = "\n\n".join(docs)  # Store complete text
+        self.full_text = "\n\n".join(docs)
         
-        # Generate embeddings
-        for doc in docs:
-            embedding = self.embedder.embed_text(doc)
-            self.embeddings.append(embedding)
+        # Generate embeddings with a small delay to avoid rate limits
+        for i, doc in enumerate(docs):
+            try:
+                embedding = self.embedder.embed_text(doc)
+                self.embeddings.append(embedding)
+                # Small sleep to be quota-friendly for free tier
+                if i % 2 == 0:
+                    time.sleep(1) 
+            except Exception as e:
+                logger.error(f"Failed to embed document {i}: {e}")
+                self.embeddings.append([0.0] * self.embedder.dimension)
         
         self.metadata.extend(metadata or [{} for _ in docs])
     
@@ -180,7 +172,7 @@ class SimpleKnowledgeBase:
         
         results = []
         for i, score in indexed_scores[:top_k]:
-            if score > 0.05:  # Lower threshold for better results
+            if score > 0.05:
                 results.append((self.documents[i], score, self.metadata[i]))
         
         return results
@@ -192,18 +184,14 @@ class SimpleKnowledgeBase:
 class ProfessionalAvatar:
     """Main chatbot class with enterprise security"""
     
-    def __init__(self, model: Any, config: SecurityConfig):
+    def __init__(self, client: genai.Client, config: SecurityConfig):
+        self.client = client
         self.config = config
         self.security_validator = SecurityValidator(config)
         self.rate_limiter = RateLimiter(config)
-        self.knowledge_base = SimpleKnowledgeBase(model)
-        
-        if model:
-            self.model = model
-            self.api_connected = True
-        else:
-            self.model = None
-            self.api_connected = False
+        self.knowledge_base = SimpleKnowledgeBase(client)
+        self.api_connected = True if client else False
+        self.model_name = "gemini-2.5-flash"
         
     system_prompt = """You are Md. Alim Al Razy's professional avatar and interview assistant. Your role:
 
@@ -242,6 +230,7 @@ Remember: You represent Md. Alim Al Razy professionally. Be confident, knowledge
         if not os.path.exists(file_path):
             error_message = f"CRITICAL ERROR: The required information file '{file_path}' was not found. This chatbot cannot function without it."
             logger.critical(error_message)
+            import streamlit as st
             st.error(error_message)
             st.info("Please make sure the `Alim_info.txt` file is in the `data` directory.")
             st.stop()
@@ -252,6 +241,7 @@ Remember: You represent Md. Alim Al Razy professionally. Be confident, knowledge
                 if not content:
                     error_message = f"CRITICAL ERROR: The information file '{file_path}' is empty. Please provide professional background information."
                     logger.critical(error_message)
+                    import streamlit as st
                     st.error(error_message)
                     st.stop()
                 logger.info(f"✅ Loaded Alim info from {file_path}")
@@ -259,36 +249,30 @@ Remember: You represent Md. Alim Al Razy professionally. Be confident, knowledge
         except Exception as e:
             error_message = f"CRITICAL ERROR: Failed to read the information file '{file_path}'. Reason: {e}"
             logger.critical(error_message)
+            import streamlit as st
             st.error(error_message)
             st.stop()
     
     def initialize_knowledge_base(self):
         """Initialize with Alim's professional information from file"""
-        # Load content from file
         content = self.load_alim_info()
         
-        # Split content into meaningful chunks
-        # Split by double newlines first, then by single newlines if needed
         if '\n\n' in content:
             documents = [doc.strip() for doc in content.split('\n\n') if doc.strip()]
         else:
-            # Split by periods for better chunking
             sentences = content.split('. ')
             documents = []
             current_chunk = ""
-            
             for sentence in sentences:
-                if len(current_chunk + sentence) < 300:  # Keep chunks reasonable size
+                if len(current_chunk + sentence) < 300:
                     current_chunk += sentence + ". "
                 else:
                     if current_chunk.strip():
                         documents.append(current_chunk.strip())
                     current_chunk = sentence + ". "
-            
             if current_chunk.strip():
                 documents.append(current_chunk.strip())
         
-        # Create metadata
         metadata = []
         for i, doc in enumerate(documents):
             doc_lower = doc.lower()
@@ -304,7 +288,6 @@ Remember: You represent Md. Alim Al Razy professionally. Be confident, knowledge
                 category = "achievements"
             else:
                 category = "overview"
-            
             metadata.append({"category": category, "importance": "high", "chunk_id": i})
         
         self.knowledge_base.add_documents(documents, metadata)
@@ -312,41 +295,23 @@ Remember: You represent Md. Alim Al Razy professionally. Be confident, knowledge
     
     def retrieve_context(self, query: str, top_k: int = 3) -> str:
         """Retrieve relevant context from knowledge base"""
-        query_lower = query.lower()
-        
-        # Get search results
         results = self.knowledge_base.search(query, top_k)
-        
         if not results:
-            # If no good matches, return full context for comprehensive responses
             return self.knowledge_base.get_full_context()
-        
-        # Combine search results
-        context_parts = []
-        for doc, score, metadata in results:
-            context_parts.append(doc)
-        
-        # Add some additional context if query seems to need it
+        context_parts = [doc for doc, score, metadata in results]
         if len(context_parts) < 2:
-            # Add more context from the full knowledge base
-            full_context = self.knowledge_base.get_full_context()
-            context_parts.append(full_context)
-        
+            context_parts.append(self.knowledge_base.get_full_context())
         return "\n\n".join(context_parts)
     
-    
     def generate_response(self, user_query: str) -> str:
-        """Generate comprehensive response using Gemini API"""
+        """Generate comprehensive response using Gemini SDK"""
         try:
-            # Check if the API was connected successfully on startup
-            if not self.api_connected or not self.model:
-                logger.warning("⚠️ Gemini API not available, using fallback")
+            if not self.api_connected or not self.client:
+                logger.warning("⚠️ Gemini client not available, using fallback")
                 return self._generate_fallback_response(user_query)
             
-            # Get context from knowledge base
             context = self.retrieve_context(user_query)
             
-            # Construct enhanced prompt
             enhanced_prompt = f"""{self.system_prompt}
 
 CONTEXT ABOUT MD. ALIM AL RAZY:
@@ -362,19 +327,30 @@ Instructions:
 
 Please provide a helpful and professional response:"""
             
-            # Generate response
-            response = self.model.generate_content(enhanced_prompt)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=enhanced_prompt
+            )
             
-            if response.text and len(response.text.strip()) > 20:
-                logger.info("✅ Generated response using Gemini API")
+            if response.text:
+                logger.info(f"✅ Generated response using {self.model_name}")
                 return response.text.strip()
             else:
                 logger.warning("⚠️ Empty response from Gemini, using fallback")
                 return self._generate_fallback_response(user_query)
             
         except Exception as e:
-            logger.error(f"❌ Response generation failed with exception: {e}", exc_info=True)
-            st.error(f"An error occurred while generating the response: {e}")
+            error_msg = str(e)
+            logger.error(f"❌ Response generation failed for {self.model_name}: {error_msg}")
+            
+            # Identify common errors
+            if "404" in error_msg or "not found" in error_msg.lower():
+                return f"Error: The model '{self.model_name}' was not found. Please check if this model is available for your API key."
+            elif "429" in error_msg or "quota" in error_msg.lower():
+                return "Error: API quota exceeded. Please wait a moment and try again."
+            
+            import streamlit as st
+            st.error(f"Gemini API Error: {error_msg}")
             return self._generate_fallback_response(user_query)
     
     def _generate_fallback_response(self, user_query: str) -> str:
@@ -384,25 +360,19 @@ Please provide a helpful and professional response:"""
     
     def process_query(self, user_input: str) -> Tuple[bool, str]:
         """Main query processing with security"""
-        # Rate limiting check
+        import streamlit as st
         rate_ok, rate_msg = self.rate_limiter.check_rate_limit()
         if not rate_ok:
             return False, rate_msg
         
-        # Input validation
         valid, sanitized_input = self.security_validator.validate_input(user_input)
         if not valid:
             return False, sanitized_input
         
-        # Generate response
         try:
             response = self.generate_response(sanitized_input)
-            
-            # Increment query count
             st.session_state.query_count += 1
-            
             return True, response
-            
         except Exception as e:
             logger.error(f"Query processing failed: {e}")
             return False, "I'm experiencing technical difficulties. Please try asking about Md. Alim Al Razy's professional background again."

@@ -1,11 +1,11 @@
 """
-Professional Avatar Streamlit Chatbot - Main Application
+Professional Avatar Streamlit Chatbot - Main Application (Reload Triggered)
 """
 
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 import logging
-from chatbot.logic import ProfessionalAvatar, SecurityConfig, SimpleEmbedder
+from chatbot.logic import ProfessionalAvatar, SecurityConfig
 
 # Configure logging
 logging.basicConfig(
@@ -16,8 +16,11 @@ logger = logging.getLogger(__name__)
 
 def load_custom_css(file_path: str):
     """Load custom CSS from a file"""
-    with open(file_path) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(file_path) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except Exception as e:
+        logger.warning(f"Could not load CSS: {e}")
 
 def main():
     """Main Streamlit application"""
@@ -53,34 +56,35 @@ def main():
         ''')
         st.stop()
     
-    # Configure Gemini API
-    model = None
+    # Configure Gemini API Client
+    client = None
     try:
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        logger.info("✅ Gemini API configured successfully.")
+        # User snippet pattern: Set env var and init client without args
+        import os
+        os.environ["GEMINI_API_KEY"] = api_key
+        client = genai.Client()
+        logger.info("✅ Gemini API Client initialized successfully.")
     except Exception as e:
+        logger.error(f"❌ Gemini API Client initialization failed: {str(e)}", exc_info=True)
         st.error("🔴 **Gemini API Initialization Failed**")
         st.error(f"An error occurred while connecting to the Gemini API: **{str(e)}**")
-        st.warning("Please double-check your `GEMINI_API_KEY` in the Streamlit secrets and ensure it is valid.")
-        st.info("If the key is correct, the Google Cloud project associated with it may have billing issues or disabled APIs.")
         st.stop()
 
     # Initialize security configuration
     config = SecurityConfig()
     
     # Initialize avatar
-    def get_avatar(genai_module, _model, _config):
-        avatar = ProfessionalAvatar(_model, _config)
-        avatar.knowledge_base.embedder = SimpleEmbedder(genai_module) # Pass genai_module to embedder
+    @st.cache_resource
+    def get_avatar(_client, _config):
+        avatar = ProfessionalAvatar(_client, _config)
         avatar.initialize_knowledge_base()
         return avatar
     
     try:
-        avatar = get_avatar(genai, model, config)
+        avatar = get_avatar(client, config)
     except Exception as e:
         st.error(f"⚠️ **Chatbot Initialization Error**: {str(e)}")
-        st.info("There was an issue setting up the chatbot. Please refresh the page to try again.")
+        logger.error(f"Chatbot initialization error: {e}", exc_info=True)
         st.stop()
     
     # Initialize chat history
@@ -109,7 +113,7 @@ def main():
         # API Status
         st.markdown("### 🔗 System Status")
         if avatar.api_connected:
-            st.markdown('<p class="status-connected">🟢 Gemini API Connected</p>', unsafe_allow_html=True)
+            st.markdown('<p class="status-connected">🟢 Gemini API (v2) Connected</p>', unsafe_allow_html=True)
         else:
             st.markdown('<p class="status-fallback">🟡 Using Fallback Mode</p>', unsafe_allow_html=True)
         
@@ -174,26 +178,24 @@ def main():
         ask_button = st.button("🚀 Ask", type="primary", use_container_width=True)
     
     # Process user input
-    if ask_button and user_input:
-        # Check if this is a new message (not already in history)
-        if not st.session_state.messages or st.session_state.messages[-1]["content"] != user_input:
-            # Add user message
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            
-            # Process query with loading indicator
-            with st.spinner("🤔 Thinking..."):
-                success, response = avatar.process_query(user_input)
-            
-            if success:
-                st.session_state.messages.append({"role": "avatar", "content": response})
-                st.success("✅ Response generated!")
-                # Increment input counter to create new input field
-                st.session_state.input_counter = st.session_state.get('input_counter', 0) + 1
-            else:
-                st.error(f"⚠️ {response}")
-            
-            # Rerun to update the UI
-            st.rerun()
+    if (ask_button or (user_input and st.session_state.get('last_input') != user_input)) and user_input:
+        st.session_state.last_input = user_input
+        # Add user message
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        
+        # Process query with loading indicator
+        with st.spinner("🤔 Thinking..."):
+            success, response = avatar.process_query(user_input)
+        
+        if success:
+            st.session_state.messages.append({"role": "avatar", "content": response})
+            # Increment input counter to create new input field
+            st.session_state.input_counter = st.session_state.get('input_counter', 0) + 1
+        else:
+            st.error(f"⚠️ {response}")
+        
+        # Rerun to update the UI
+        st.rerun()
     
     # Alternative: Add a "Clear Chat" button
     if st.sidebar.button("🗑️ Clear Chat History"):
@@ -210,13 +212,9 @@ def main():
     # Debug information (only show in development)
     if st.sidebar.button("🔧 Debug Info"):
         with st.expander("Debug Information"):
-            st.write("**API Status:**", "Connected" if avatar.api_connected else "Disconnected")
+            st.write("**API Client:**", "Initialized" if client else "None")
             st.write("**Knowledge Base Docs:**", len(avatar.knowledge_base.documents))
             st.write("**Session Queries:**", st.session_state.get('query_count', 0))
-            
-            if avatar.knowledge_base.documents:
-                st.write("**First Document Preview:**")
-                st.text(avatar.knowledge_base.documents[0][:200] + "...")
     
     # Footer
     st.markdown("""
@@ -224,7 +222,6 @@ def main():
         <h3>🚀 About This Avatar</h3>
         <p>
             Secured with <strong>Enterprise-grade</strong> safety measures
-        </p>
         </p>
         <p>
             <small>
